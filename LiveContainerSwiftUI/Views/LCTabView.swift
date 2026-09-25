@@ -21,34 +21,34 @@ struct LCTabView: View {
 
     let pub = NotificationCenter.default.publisher(for: UIScene.didDisconnectNotification)
     
-    var body: some View {
-        TabView(selection: $sharedModel.selectedTab) {
-            if DataManager.shared.model.multiLCStatus != 2 {
-                LCSourcesView()
-                    .tabItem {
-                        Label("lc.tabView.sources".loc, systemImage: "books.vertical")
-                    }
-                    .tag(LCTabIdentifier.sources)
-            }
-            LCAppListView()
-                .tabItem {
-                    Label("lc.tabView.apps".loc, systemImage: "square.stack.3d.up.fill")
-                }
-                .tag(LCTabIdentifier.apps)
-            if DataManager.shared.model.multiLCStatus != 2 {
-                LCTweaksView()
-                    .tabItem{
-                        Label("lc.tabView.tweaks".loc, systemImage: "wrench.and.screwdriver")
-                    }
-                    .tag(LCTabIdentifier.tweaks)
-            }
-            
+    @ViewBuilder
+    private var tabContent: some View {
+        switch sharedModel.selectedTab {
+        case .apps:
+            AetherAppsView()
+        case .sources:
+            LCSourcesView()
+        case .tweaks:
+            AetherRefreshView()
+        case .settings:
             LCSettingsView()
-                .tabItem {
-                    Label("lc.tabView.settings".loc, systemImage: "gearshape.fill")
-                }
-                .tag(LCTabIdentifier.settings)
         }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            AetherHeader(title: sharedModel.selectedTab.aetherTitle)
+
+            tabContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        // Liquid Glass tab bar floats over every tab's content, old and new alike
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            AetherBottomBar(selection: $sharedModel.selectedTab)
+        }
+        .background(AetherPalette.background)
+        .ignoresSafeArea(.keyboard)
+        .aetherToast()
         .downloadAlert(helper: downloadHelper)
         .environmentObject(downloadHelper)
         .alert("lc.common.error".loc, isPresented: $errorShow){

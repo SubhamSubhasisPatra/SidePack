@@ -7,3 +7,8 @@ packages/
 xcuserdata
 Resources/Frameworks/OpenSSL.framework
 apps_nightly.json
+
+# local tooling / test artifacts
+.commandcode/
+images/
+command-code-session-*.html

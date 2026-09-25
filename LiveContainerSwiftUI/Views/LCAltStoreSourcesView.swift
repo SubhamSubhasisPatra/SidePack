@@ -46,6 +46,18 @@ struct AltStoreSource: Identifiable, Hashable {
     let tintColor: Color?
     let website: URL?
     let apps: [AltStoreSourceApp]
+    let news: [AltStoreSourceNews]
+}
+
+struct AltStoreSourceNews: Identifiable, Hashable {
+    let id = UUID()
+    let appIdentifier: String?
+    let title: String
+    let caption: String?
+    let imageURL: URL?
+    let tintColor: Color?
+    let url: URL?
+    let date: Date?
 }
 
 private struct AltStoreSourceResponse: Decodable {
@@ -58,6 +70,17 @@ private struct AltStoreSourceResponse: Decodable {
     let tintColor: String?
     let website: String?
     let apps: [AltStoreSourceAppResponse]?
+    let news: [AltStoreSourceNewsResponse]?
+}
+
+private struct AltStoreSourceNewsResponse: Decodable {
+    let appIdentifier: String?
+    let title: String?
+    let caption: String?
+    let imageURL: String?
+    let tintColor: String?
+    let url: String?
+    let date: String?
 }
 
 private struct AltStoreSourceAppResponse: Decodable {
@@ -352,6 +375,18 @@ enum AltStoreSourceLoader {
         let apps = (response.apps ?? []).compactMap { appResponse in
             buildApp(from: appResponse, baseURL: baseURL, fallbackTint: response.tintColor)
         }
+        let news = (response.news ?? []).compactMap { newsResponse -> AltStoreSourceNews? in
+            guard let title = newsResponse.title else { return nil }
+            return AltStoreSourceNews(
+                appIdentifier: newsResponse.appIdentifier,
+                title: title,
+                caption: newsResponse.caption,
+                imageURL: url(for: newsResponse.imageURL, baseURL: baseURL),
+                tintColor: color(from: newsResponse.tintColor ?? response.tintColor),
+                url: url(for: newsResponse.url, baseURL: baseURL),
+                date: parseDate(newsResponse.date)
+            )
+        }
         return AltStoreSource(
             name: name,
             identifier: response.identifier,
@@ -361,7 +396,8 @@ enum AltStoreSourceLoader {
             headerURL: url(for: response.headerURL, baseURL: baseURL),
             tintColor: color(from: response.tintColor),
             website: url(for: response.website, baseURL: baseURL),
-            apps: apps
+            apps: apps,
+            news: news
         )
     }
     
